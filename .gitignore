@@ -1,0 +1,20 @@
+# CMake-generated files
+/cmake-build-debug/
+/build/
+/.idea/
+# Compiled object files
+*.o
+
+# Qt specific
+*.user
+*.pro.user.*
+*.qmake.stash
+*.qmake.cache
+
+# Database and logs
+*.db
+*.log
+
+# OS specific files
+.DS_Store
+Thumbs.db
