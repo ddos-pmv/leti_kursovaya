@@ -14,7 +14,7 @@
 
 class RaceModel : public IModel<Race> {
 private:
-    QSqlDatabase &db;
+    QSqlDatabase db = QSqlDatabase::database( qgetenv("DB_CONNECTION_NAME"));
 
 public:
     RaceModel(QSqlDatabase &db) : db(db) {};

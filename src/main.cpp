@@ -2,12 +2,13 @@
 #include <QApplication>
 #include <QDebug>
 #include "Models/DriverModel.h"
-#include "Entities/Driver.h"
-
+#include "MainWindow.h"
+#include <QPixmap>
+#include <QScreen>
 int main (int argc, char *argv[]) {
-    QApplication app(argc, argv);
+    qputenv("DB_CONNECTION_STRING", "my");
 
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "my");
     db.setDatabaseName("racing.db");
 
     if(!db.open()) {
@@ -17,14 +18,33 @@ int main (int argc, char *argv[]) {
 
     qDebug() << "Opened database";
 
-    DriverModel driverModel(db);
+    QApplication app(argc, argv);
+
+    MainWindow window;
+
+    QScreen *screen = QApplication::primaryScreen();
+    QRect rect = screen->geometry();
+    int x = (rect.width() - window.width()) / 2;
+    int y = (rect.height() - window.height()) / 2;
+    window.move(x, y);
+    // window.setAttribute(Qt::WA_TranslucentBackground, true);
+
+        // QPalette pal = window.palette(); pal.setBrush(QPalette::Normal, QPalette::Window,
+        //     QBrush(QPixmap("./bg.png")));
+        // window.setPalette(pal);
 
 
 
+    window.show();
 
-    Driver driver("Lewis Hamilton", 36, "Mercedes", 250);
-    driverModel.add(driver);
 
+    //
+    // DriverModel driverModel;
+    // QVector<Driver> drivers = DriverModel::getAllSortedByName();
+    //
+    // for(int i = 0; i < drivers.count(); i++) {
+    //     qDebug() << drivers[i].getInfo() << '\n';
+    // }
 
 
     return app.exec();

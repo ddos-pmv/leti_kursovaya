@@ -25,7 +25,16 @@ add_executable(OOPQt src/main.cpp
         src/Entities/Track.h
         src/Models/TrackModel.h
         src/Entities/Race.h
-        src/Models/RaceModel.h)
+        src/Models/RaceModel.h
+        src/MainWindow.h
+        src/Models/DriverModel.cpp
+        src/Controllers/IController.h
+        src/Views/DriversListView.h
+        src/Views/CustomTableWidget.h
+        src/Views/DriverCartView.h
+        src/Views/Modals/DriverModal.h
+
+)
 target_link_libraries(OOPQt
         Qt5::Core
         Qt5::Gui

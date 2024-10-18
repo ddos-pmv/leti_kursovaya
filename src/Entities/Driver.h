@@ -20,6 +20,7 @@ public:
 
     // Сеттеры
     void setPoints(int newPoints) { points = newPoints; }
+    void setId(int id) {this->id = id;}
 
     QString getInfo() const override {
         return QString("Driver: %1, Team: %2, Points: %3").arg(name, team).arg(points);

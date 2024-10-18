@@ -14,10 +14,9 @@
 
 class TrackModel : public IModel<Track> {
 private:
-    QSqlDatabase &db;
+    QSqlDatabase db = QSqlDatabase::database(qgetenv("DB_CONNECTION_NAME"));
 
 public:
-    TrackModel(QSqlDatabase &db) : db(db) {};
 
     bool add(const Track &track) override {
         QSqlQuery query(db);

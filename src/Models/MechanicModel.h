@@ -14,9 +14,8 @@
 
 class MechanicMode : public IModel<Mechanic> {
 private:
-    QSqlDatabase &db;
+    QSqlDatabase db = QSqlDatabase::database(qgetenv("DB_CONNECTION_STRING"));
 public:
-    MechanicMode(QSqlDatabase &db) : db(db) {};
     bool add(const Mechanic& mechanic) override {
         QSqlQuery query(db);
         query.prepare(

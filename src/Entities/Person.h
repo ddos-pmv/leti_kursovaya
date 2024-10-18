@@ -13,6 +13,7 @@ protected:
     QString name;
     uint age;
     QString team;
+    QString img_url;
 
 public:
     Person(int id, const QString &name, uint age, const QString &team)
@@ -22,6 +23,8 @@ public:
     QString getName() const {return name;}
     QString getTeam() const {return team;}
     uint getAge() const {return age;}
+    int getId() const {return id;}
+    QString getImgUrl() const {return img_url;}
 
     //Setters
     void setName(const QString &newName) { name = newName; }
