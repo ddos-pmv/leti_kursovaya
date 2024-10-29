@@ -4,10 +4,12 @@ import QtQuick.Layouts 1.15
 import QtGraphicalEffects 1.15
 
 ApplicationWindow {
-    id: mainWindow
+    id: root
 
     readonly property int interfaceWidth: 1000
     readonly property int interfaceHeight: 500
+    readonly property int rowHeight: 30
+    readonly property int defRowMargin: 5
 
     visible: true
     width: 1400
@@ -24,7 +26,7 @@ ApplicationWindow {
         FastBlur {
             anchors.fill: parent
             source: parent
-            radius: 0.5
+            radius: 4
         }
 
     }
@@ -37,13 +39,14 @@ ApplicationWindow {
     }
 
     Rectangle {
-        implicitWidth: mainWindow.interfaceWidth
-        implicitHeight: mainWindow.interfaceHeight
+        implicitWidth: root.interfaceWidth
+        implicitHeight: root.interfaceHeight
         anchors.centerIn: parent
         z: 2
         color: "transparent"
 
         RowLayout {
+
             anchors.fill: parent
             spacing: 5
 
@@ -56,35 +59,40 @@ ApplicationWindow {
                 color: "transparent"
 
                 ListView {
+                    id: sideMenu
+
                     anchors.fill: parent
-                    model: ["Drivers", "Races", "Tracks", "", "", "", "", "", "", "", "", ""]
-                    spacing: 5
+                    model: ["Drivers", "Races", "Tracks"]
+                    spacing: root.defRowMargin
 
                     delegate: Rectangle {
-                        height: 30
+                        id: delegator
+
+                        height: root.rowHeight
                         width: ListView.view.width
-                        opacity: modelData != "" ? 0.7 : 0.35
                         color: "#646464"
+                        opacity: 0.8
+                        focus: true
 
                         MouseArea {
                             hoverEnabled: true
                             anchors.fill: parent
                             onEntered: {
-                                if(modelData!=""){
+                                if (modelData != "") {
                                     parent.color = "#ff0066";
                                     parent.opacity = 1;
                                 }
                             }
                             onExited: {
-                                modelText.color = "white";
                                 parent.color = "#646464";
-                                parent.opacity = modelData!="" ? 0.7 : 0.35;
+                                parent.opacity = 0.8;
+                            }
+                            onClicked: {
+                                sideMenu.currentIndex = index
                             }
                         }
 
                         Text {
-                            id: modelText
-
                             anchors.centerIn: parent
                             text: modelData
                             color: "white"
@@ -96,12 +104,24 @@ ApplicationWindow {
 
             }
 
-            Rectangle {
-                id: mainRec
-
-                color: "transparent"
-                Layout.fillWidth: true
+            StackLayout{
+                id: stackLayout
                 Layout.fillHeight: true
+                Layout.fillWidth: true
+                currentIndex: sideMenu.currentIndex
+
+
+                Text{
+                    text: "Drivers"
+                }
+
+                Text {
+                    text: "Hello"
+                }
+
+                Text {
+                    text: "There"
+                }
             }
 
         }
