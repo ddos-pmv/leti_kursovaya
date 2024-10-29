@@ -2,5 +2,8 @@
     <qresource prefix="qml/">
         <file alias="main.qml">qml/main.qml</file>
     </qresource>
+    <qresource prefix="images/">
+        <file alias="bg.png">public/bg.png</file>
+    </qresource>
 
 </RCC>

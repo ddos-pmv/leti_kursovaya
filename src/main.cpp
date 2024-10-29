@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
     const QUrl qrcUrl("qrc:qml/main.qml");
     QObject::connect(&engine,   &QQmlApplicationEngine::objectCreated, &app,
         [qrcUrl](QObject *obj,const QUrl &objUrl) {
-        if(!obj &&  objUrl != qrcUrl)
+        if(!obj &&  objUrl == qrcUrl)
             QApplication::exit(-1);
     }, Qt::QueuedConnection);
 
