@@ -1,40 +1,25 @@
-#include <QSqlDatabase>
-#include <QApplication>
-#include <QDebug>
-#include "Models/DriverModel.h"
-#include "MainWindow.h"
-#include "DatabaseException.h"
-#include <QPixmap>
-#include <QScreen>
+// main.cpp
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+#include "DriverListModel.h"
 
 int main(int argc, char *argv[]) {
-    qputenv("DB_CONNECTION_STRING", "my");
+    QGuiApplication app(argc, argv);
 
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "my");
-    db.setDatabaseName("racing.db");
+    // Создаём модель и заполняем данными
+    DriverListModel model;
+    QVector<Driver> drivers = {
+        Driver("Max Verstappen", 24, "Red Bull Racing", 332),
+        Driver("Lewis Hamilton", 36, "Mercedes", 347),
+        Driver("asdfdsf", 3432, "adfadf", 0)
+        // Добавьте другие элементы
+    };
+    model.setDrivers(drivers);
 
-    try {
-        if (!db.open()) {
-            throw DatabaseException("Error opening database: " + db.lastError().text().toStdString());
-        }
+    QQmlApplicationEngine engine;
+    engine.rootContext()->setContextProperty("driverModel", &model);
+    engine.load(QUrl(QStringLiteral("hello/src/qml/main.qml")));
 
-        qDebug() << "Opened database";
-
-        QApplication app(argc, argv);
-
-        MainWindow window;
-
-        QScreen *screen = QApplication::primaryScreen();
-        QRect rect = screen->geometry();
-        int x = (rect.width() - window.width()) / 2;
-        int y = (rect.height() - window.height()) / 2;
-        window.move(x, y);
-
-        window.show();
-
-        return app.exec();
-    } catch (const DatabaseException& e) {
-        qDebug() << "DatabaseException caught:" << e.what();
-        return -1;
-    }
+    return app.exec();
 }
