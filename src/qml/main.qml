@@ -118,7 +118,6 @@ ApplicationWindow {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 currentIndex: sideMenu.currentIndex
-
                 ListView {
                     id: listView
 

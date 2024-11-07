@@ -1,20 +1,36 @@
 // main.cpp
-#include <QGuiApplication>
+#include <QCoreApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QSqlDatabase>
+#include <QApplication>
+#include <QDebug>
+#include <QPixmap>
+#include <QScreen>
+
+#include "Models/DriverModel.h"
 #include "DriverListModel.h"
+#include "Controllers/DriverController.h"
 
 int main(int argc, char *argv[]) {
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
+    qputenv("DB_CONNECTION_STRING", "my");
+
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "my");
+    db.setDatabaseName("racing.db");
+
+
+
+    if(!db.open()) {
+        qDebug() << "Error opening database" << db.lastError().text();
+        return -1;
+    }
+
+    qDebug() << "Opened database";
 
     // Создаём модель и заполняем данными
     DriverListModel model;
-    QVector<Driver> drivers = {
-        Driver("Max Verstappen", 24, "Red Bull Racing", 332),
-        Driver("Lewis Hamilton", 36, "Mercedes", 347),
-        Driver("asdfdsf", 3432, "adfadf", 0)
-        // Добавьте другие элементы
-    };
+    QVector<Driver> drivers =  DriverController::getAllByName();
     model.setDrivers(drivers);
 
     QQmlApplicationEngine engine;
@@ -23,3 +39,4 @@ int main(int argc, char *argv[]) {
 
     return app.exec();
 }
+
