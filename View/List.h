@@ -11,10 +11,10 @@
 #include "MainThemeVars.h"
 
 
-class MainSidebar : public QListWidget{
+class List : public QListWidget{
     Q_OBJECT
 public:
-    explicit MainSidebar(const QString& objName, QWidget* parent = nullptr);
+    explicit List(const QString& objName, QWidget* parent = nullptr);
     void setupItems(const QStringList& items);
 
 

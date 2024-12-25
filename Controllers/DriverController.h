@@ -10,6 +10,9 @@
 #include <QSettings>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QSharedPointer>
+#include <QDebug>
+#include <QRegularExpression>
 
 #include "../Entities/Driver.h"
 #include "../Exceptions/CustomExceptions.h"
@@ -18,9 +21,11 @@ class DriverController {
 private:
 public:
     static void validateDriver(const Driver& driver);
-    static QVector<Driver> all(const QString& by = "name", bool desc = false);
+    static QVector<QSharedPointer<Driver>> all(const QString& by = "name", bool desc = false);
     static void add(const QString& name, int  age, int team_id);
     static void update(int id, const QString& name, int age, int team_id);
+    static QSharedPointer<Driver> getById(int id);
+    static void remove(int id);
 
 };
 

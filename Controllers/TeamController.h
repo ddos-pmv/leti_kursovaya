@@ -7,8 +7,6 @@
 #include <QSqlError>
 #include <QVector>
 
-#include "TeamController.h"
-
 #include "../Exceptions/CustomExceptions.h"
 #include "../Entities/Team.h"
 
@@ -18,6 +16,9 @@ private:
 
 public:
     static void validateTeamName(const QString& teamName);
+
+    static QSqlDatabase getDatabase() ;
+
     static void add(const QString& teamName);
     static QVector<Team> all();
     static QString get(int id);

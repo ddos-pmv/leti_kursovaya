@@ -4,31 +4,32 @@
 #include <QStackedWidget>
 #include <QWidget>
 #include <QListView>
+#include <QVBoxLayout>
+
 
 #include "../../Models/DriversModel.h"
 #include "DriversDelegate.h"
+#include "DriversCard.h"
 #include "../../Entities/Driver.h"
 #include "../../Controllers/DriverController.h"
+#include "../MainThemeVars.h"
 
 class DriversView : public QStackedWidget {
 public:
-    explicit DriversView(QWidget* parent = nullptr) : QStackedWidget(parent) {
-        driversListView = new QListView(this);
-        driversModel = new DriversModel(this);
+    explicit DriversView(QWidget* parent = nullptr);
 
-        QVector<QSharedPointer<Driver>> drivers = DriverController::all();
 
-        for(auto& driver : drivers) {
-            driversModel->addDriver(driver);
-        }
-
-        addWidget(driversListView);
-        setCurrentIndex(0);
-    }
+    const DriversModel* model() const{return driversModel;}
+    const QListView* listView() const{return driversListView;}
 
 private:
+    QWidget* listViewWrapper;
+
     QListView* driversListView;
     DriversModel* driversModel;
+    DriversCard* driversCard;
+
+    void setStyleSheetForListView(QListView* listView);
 
 };
 

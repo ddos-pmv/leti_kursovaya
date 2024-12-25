@@ -1,6 +1,6 @@
-#include "MainSidebar.h"
+#include "List.h"
 
-MainSidebar::MainSidebar(const QString& objName, QWidget *parent) : QListWidget(parent) {
+List::List(const QString& objName, QWidget *parent) : QListWidget(parent) {
     setObjectName(objName);
     setStyleSheet(QString(R"(
         QListWidget#%8 {
@@ -30,11 +30,10 @@ MainSidebar::MainSidebar(const QString& objName, QWidget *parent) : QListWidget(
         MainTheme::SidebarSelectedTextColor.name(),
         objName
         ));
-    setSpacing(MainTheme::RowMargin);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
-void MainSidebar::setupItems(const QStringList &items) {
+void List::setupItems(const QStringList &items) {
     for (const auto& item : items) {
         addItem(item);
     }
