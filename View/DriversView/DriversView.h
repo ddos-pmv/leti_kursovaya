@@ -5,6 +5,8 @@
 #include <QWidget>
 #include <QListView>
 #include <QVBoxLayout>
+#include <QListWidget>
+#include <QSortFilterProxyModel>
 
 
 #include "../../Models/DriversModel.h"
@@ -13,6 +15,7 @@
 #include "../../Entities/Driver.h"
 #include "../../Controllers/DriverController.h"
 #include "../MainThemeVars.h"
+#include "AddDriversDialog.h"
 
 class DriversView : public QStackedWidget {
 public:
@@ -25,11 +28,26 @@ public:
 private:
     QWidget* listViewWrapper;
 
+    QWidget* controlHeader;
+    QPushButton* addDriverButton;
+    QPushButton* sortByTeam;
+    QPushButton* sortByName;
+    QPushButton* sortByAge;
+    QPushButton* sortByPoints;
+
+    bool nameInc = true;
+    bool ageInc = true;
+    bool teamInc = true;
+    bool pointsInc = true;
+
     QListView* driversListView;
     DriversModel* driversModel;
     DriversCard* driversCard;
+    QSortFilterProxyModel* sortProxyModel;
 
     void setStyleSheetForListView(QListView* listView);
+    void showAddDriverDialog();
+    QWidget* createControlHeader(QWidget* parent = nullptr);
 
 };
 

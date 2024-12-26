@@ -67,7 +67,7 @@ QVector<QSharedPointer<Driver>> DriverController::all(const QString& by, bool de
 }
 
 
-void DriverController::add(const QString& name, const int age, const int team_id) {
+int DriverController::add(const QString& name, const int age, const int team_id) {
     QSqlDatabase db = QSqlDatabase::database(qgetenv("MAIN_CONNECTION"));
     if (!db.isOpen()) {
         throw DatabaseException("DriversController: " + db.lastError().text());
@@ -87,9 +87,20 @@ void DriverController::add(const QString& name, const int age, const int team_id
 
     // Выполнение запроса
     if (!query.exec()) {
-        throw DatabaseException("DriversController:" + query.lastError().text());
+        throw DatabaseException("DriversController: " + query.lastError().text());
     }
+
+    // Получение ID последней вставленной записи
+    bool ok;
+    int driverId = query.lastInsertId().toInt(&ok);
+
+    if (!ok) {
+        throw DatabaseException("DriversController: Unable to retrieve the ID of the added driver.");
+    }
+
+    return driverId;
 }
+
 
 
 void DriverController::update(int id, const QString& name, const int age, const int team_id) {

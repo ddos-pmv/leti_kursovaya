@@ -34,6 +34,7 @@ set(VIEW
         View/DriversView/DriversDelegate.h
         View/DriversView/DriversCard.h
         View/DriversView/DriversView.cpp
+        View/DriversView/AddDriversDialog.h
 )
 
 set(MODELS

@@ -61,7 +61,7 @@ public:
         buttonLayout->addWidget(deleteButton);
 
         mainLayout->addLayout(buttonLayout);
-
+        setLayout(mainLayout);
         // Подключение сигналов
         connect(saveButton, &QPushButton::clicked, this, &DriversCard::saveDriver);
         connect(deleteButton, &QPushButton::clicked, this, &DriversCard::deleteDriver);
