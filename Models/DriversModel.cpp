@@ -1,6 +1,4 @@
 
-#include "DriversModel.h"
-
 
 DriversModel::DriversModel(QObject* parent)
         : QAbstractListModel(parent) {}

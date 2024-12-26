@@ -18,7 +18,6 @@
 #include "../Exceptions/CustomExceptions.h"
 
 class DriverController {
-private:
 public:
     static void validateDriver(const Driver& driver);
     static QVector<QSharedPointer<Driver>> all(const QString& by = "name", bool desc = false);
@@ -27,6 +26,9 @@ public:
     static QSharedPointer<Driver> getById(int id);
     static void remove(int id);
 
+private:
+    static QSqlQuery prepareAndExecQuery(const QString &queryStr, const QVariantMap &bindValues);
+    static QSqlDatabase getDatabase();
 };
 
 

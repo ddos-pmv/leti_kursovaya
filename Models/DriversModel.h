@@ -1,52 +1,60 @@
-//
-// Created by Сергей Перлин on 23.12.2024.
-//
+#ifndef DRIVERSMODEL_H
+#define DRIVERSMODEL_H
 
-#ifndef DIRVERSMODEL_H
-#define DIRVERSMODEL_H
-
-#include <QAbstractListModel>
-#include <QVector>
-#include <QSharedPointer>
-#include <QDebug>
-
+#include "BaseListModel.h"
 #include "../Entities/Driver.h"
+#include "../Controllers/DriverController.h"
+#include <QObject>
 
+#include "../UpdateManager.h"
 
-
-class DriversModel : public QAbstractListModel {
+class DriversModel : public BaseListModel<Driver> {
     Q_OBJECT
 public:
     enum DriverRoles {
-        IdRole =  Qt::UserRole+1,
+        IdRole = Qt::UserRole + 1,
         NameRole,
         AgeRole,
         TeamRole,
         PointsRole
     };
 
-    explicit DriversModel(QObject* parent = nullptr);
+    explicit DriversModel(QObject* parent = nullptr)
+        : BaseListModel(parent) {
+        m_roleNames[IdRole] = "id";
+        m_roleNames[NameRole] = "name";
+        m_roleNames[AgeRole] = "age";
+        m_roleNames[TeamRole] = "team";
+        m_roleNames[PointsRole] = "points";
 
-    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+        loadItemsFromDatabase();
+        connect(UpdateManager::instance(), &UpdateManager::teamsUpdated, this, &DriversModel::loadItemsFromDatabase);
+    }
 
-    QHash<int, QByteArray> roleNames() const override;
-
-    void addDriver(QSharedPointer<Driver> driver);
-    void clearDrivers();
-
-    int findDriverRow(int driverId) const;
-
-    void updateDriver(int row, QSharedPointer<Driver> driver);
-
-    void removeDriver(int row);
-
-private:
-    QVector<QSharedPointer<Driver>> m_drivers;
+    QVariant dataForRole(const QSharedPointer<Driver>& item, int role) const override {
+        switch (role) {
+            case IdRole: return item->id();
+            case NameRole: return item->name();
+            case AgeRole: return item->age();
+            case TeamRole: return item->team();
+            case PointsRole: return item->points();
+            default: return {};
+        }
+    }
 
 
+    void loadItemsFromDatabase() override {
+        // Очищаем текущую модель
+        clearItems();
+
+        // Загружаем все элементы из контроллера
+        QVector<QSharedPointer<Driver>> drivers = DriverController::all();
+
+        // Добавляем элементы в модель
+        for (auto& driver : drivers) {
+            addItem(driver);
+        }
+    }
 };
 
-
-
-#endif //DIRVERSMODEL_H
+#endif // DRIVERSMODEL_H

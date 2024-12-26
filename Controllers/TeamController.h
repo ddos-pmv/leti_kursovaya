@@ -6,25 +6,32 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QVector>
+#include <QVariant>
+#include <QSqlError>
+#include <QSqlQuery>
+#include <QDebug>
+#include <stdexcept>
+
 
 #include "../Exceptions/CustomExceptions.h"
 #include "../Entities/Team.h"
+#include "../UpdateManager.h"
 
 
 class TeamController {
-private:
-
 public:
     static void validateTeamName(const QString& teamName);
 
-    static QSqlDatabase getDatabase() ;
+    static QSqlDatabase getDatabase();
 
-    static void add(const QString& teamName);
-    static QVector<Team> all();
-    static QString get(int id);
+    static void validate(const Team& team);
+
+    static int add(const QString& teamName);
+    static QVector<QSharedPointer<Team>> all();
+    static QSharedPointer<Team> get(int id);
     static int get(const QString& teamName);
     static void update(int id, const QString& newName);
-
-
+private:
+    static QSqlQuery prepareAndExecQuery(const QString &queryStr, const QVariantMap &bindValues);
 };
 #endif //TEAMCONTROLLER_H

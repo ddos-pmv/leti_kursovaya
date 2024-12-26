@@ -6,20 +6,27 @@
 #define TEAM_H
 
 #include <QString>
+#include <QObject>
 
-class Team {
+class Team : public QObject{
     int m_id;
     QString m_name;
-    // uint m_drivers;
-    // uint m_mechanics;
-    // uint m_managers ;
+    int m_driversCol;
+    int m_pointsSum;
 public:
-    Team(int id, const QString& name) : m_id(id), m_name(name){}
-    // Team(int id, const QString& name, int drivers = 0, int mechanics = 0, int managers = 0)
-    // :m_id(id), m_name(name), m_drivers(drivers), m_mechanics(mechanics), m_managers(managers) {};
 
-    uint id() const {return m_id;}
-    QString name() const {return m_name;}
+    Team(int id, const QString& name, int drivers = 0, int pointsSum = 0, QObject* parent = nullptr);
+    Team(const QString& name, int drivers = 0, int pointsSum = 0, QObject* parent = nullptr);
+
+    uint id() const;
+    QString name() const;
+    int driversCol() const;
+    int pointsSum() const;
+
+    void setId(int id);
+    void setName(const QString& teamName);
+    void setDriversCol(int driversCol);
+    void setPointsSum(int pointsSum);
 
 };
 

@@ -28,12 +28,17 @@ public:
 private:
     QWidget* listViewWrapper;
 
+
     QWidget* controlHeader;
+    QWidget* titleHeader;
+    QHBoxLayout* titleHeaderLayout;
+
+
     QPushButton* addDriverButton;
-    QPushButton* sortByTeam;
-    QPushButton* sortByName;
-    QPushButton* sortByAge;
-    QPushButton* sortByPoints;
+    QPushButton* teamButton;
+    QPushButton* nameButton;
+    QPushButton* ageButton;
+    QPushButton* pointsButton;
 
     bool nameInc = true;
     bool ageInc = true;
@@ -47,6 +52,7 @@ private:
 
     void setStyleSheetForListView(QListView* listView);
     void showAddDriverDialog();
+    void connectTitleButtons();
     QWidget* createControlHeader(QWidget* parent = nullptr);
 
 };

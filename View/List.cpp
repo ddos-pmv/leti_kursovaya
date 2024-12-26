@@ -31,6 +31,7 @@ List::List(const QString& objName, QWidget *parent) : QListWidget(parent) {
         objName
         ));
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setCurrentRow(0);
 }
 
 void List::setupItems(const QStringList &items) {

@@ -1,5 +1,7 @@
 #include "DriverController.h"
 
+#include "../UpdateManager.h"
+
 void DriverController::validateDriver(const Driver &driver) {
     if (driver.name().isEmpty()) {
         throw ValidationException("Driver's name cannot be empty.");
@@ -68,36 +70,21 @@ QVector<QSharedPointer<Driver>> DriverController::all(const QString& by, bool de
 
 
 int DriverController::add(const QString& name, const int age, const int team_id) {
-    QSqlDatabase db = QSqlDatabase::database(qgetenv("MAIN_CONNECTION"));
-    if (!db.isOpen()) {
-        throw DatabaseException("DriversController: " + db.lastError().text());
-    }
+    QSqlQuery query = prepareAndExecQuery(
+        "INSERT INTO drivers (name, age, team_id) "
+        "VALUES (:name, :age, :team_id)",
+        {{":name", name},
+            {":age", age},
+            {":team_id", team_id}});
 
-    QSqlQuery query(db);
-
-    // Параметризованный запрос
-    if (!query.prepare("INSERT INTO drivers (name, age, team_id) VALUES (:name, :age, :team_id)")) {
-        throw DatabaseException(query.lastError().text());
-    }
-
-    // Привязка значений к параметрам
-    query.bindValue(":name", name);
-    query.bindValue(":age", age);
-    query.bindValue(":team_id", team_id);
-
-    // Выполнение запроса
-    if (!query.exec()) {
-        throw DatabaseException("DriversController: " + query.lastError().text());
-    }
-
-    // Получение ID последней вставленной записи
     bool ok;
     int driverId = query.lastInsertId().toInt(&ok);
-
     if (!ok) {
         throw DatabaseException("DriversController: Unable to retrieve the ID of the added driver.");
     }
 
+
+    UpdateManager::instance()->driversInfoUpdated();
     return driverId;
 }
 
@@ -114,59 +101,28 @@ void DriverController::update(int id, const QString& name, const int age, const 
         throw ValidationException("Team ID must be positive.");
     }
 
-    QSqlDatabase db = QSqlDatabase::database(qgetenv("MAIN_CONNECTION"));
-    if (!db.isOpen()) {
-        throw DatabaseException("DriversController: Failed to open database: " + db.lastError().text());
-    }
-
-    QSqlQuery query(db);
-    if (!query.prepare("UPDATE drivers SET name = :name, age = :age, team_id = :team_id WHERE id = :id")) {
-        throw DatabaseException("DriversController: Failed to prepare update query: " + query.lastError().text());
-    }
-
-    query.bindValue(":name", name);
-    query.bindValue(":age", age);
-    query.bindValue(":team_id", team_id);
-    query.bindValue(":id", id);
-
-    if (!query.exec()) {
-        throw DatabaseException("DriversController: Failed to execute update query: " + query.lastError().text());
-    }
+    QSqlQuery query = prepareAndExecQuery("UPDATE drivers SET name = :name, age = :age, team_id = :team_id WHERE id = :id", {
+        {":name", name},
+        {":age", age},
+        {":team_id", team_id},
+        {":id", id}});
 
     if (query.numRowsAffected() == 0) {
         throw ValidationException("No driver found with the specified ID: " + QString::number(id));
     }
 
+    UpdateManager::instance()->driversInfoUpdated();
     qDebug() << "Driver with ID" << id << "successfully updated.";
 }
 
 QSharedPointer<Driver> DriverController::getById(int id) {
-    QSqlDatabase db = QSqlDatabase::database(qgetenv("MAIN_CONNECTION"));
-    if (!db.isOpen()) {
-        throw DatabaseException("DriversController: Failed to open database: " + db.lastError().text());
-    }
-
-    QSqlQuery query(db);
-    QString queryString = QString(
-        "SELECT d.id, d.name, d.age, t.name AS team_name, "
+    QSqlQuery query = prepareAndExecQuery("SELECT d.id, d.name, d.age, t.name AS team_name, "
         "COALESCE(SUM(rp.points), 0) AS total_points "
         "FROM drivers d "
         "LEFT JOIN teams t ON d.team_id = t.id "
         "LEFT JOIN race_participation rp ON d.id = rp.driver_id "
         "WHERE d.id = :id "
-        "GROUP BY d.id, d.name, d.age, t.name"
-    );
-
-
-    if (!query.prepare(queryString)) {
-        throw DatabaseException("DriversController: Failed to prepare query: " + query.lastError().text());
-    }
-
-    query.bindValue(":id", id);
-
-    if (!query.exec()) {
-        throw DatabaseException("DriversController: Failed to execute query: " + query.lastError().text());
-    }
+        "GROUP BY d.id, d.name, d.age, t.name", { {":id", id} });
 
     if (!query.next()) {
         throw ValidationException("DriversController: No driver found with ID " + QString::number(id));
@@ -182,38 +138,39 @@ QSharedPointer<Driver> DriverController::getById(int id) {
 }
 
 void DriverController::remove(int id) {
-    QSqlDatabase db = QSqlDatabase::database(qgetenv("MAIN_CONNECTION"));
-    if (!db.isOpen()) {
-        throw DatabaseException("DriversController: Failed to open database: " + db.lastError().text());
-    }
+    QSqlQuery query = prepareAndExecQuery("DELETE FROM race_participation WHERE driver_id = :id", { {":id", id} });
 
-    QSqlQuery query(db);
-
-    // Удаление записей из race_participation
-    if (!query.prepare("DELETE FROM race_participation WHERE driver_id = :id")) {
-        throw DatabaseException("DriversController: Failed to prepare race_participation deletion query: " + query.lastError().text());
-    }
-    query.bindValue(":id", id);
-
-    if (!query.exec()) {
-        throw DatabaseException("DriversController: Failed to execute race_participation deletion query: " + query.lastError().text());
-    }
-
-    // Удаление гонщика из drivers
-    if (!query.prepare("DELETE FROM drivers WHERE id = :id")) {
-        throw DatabaseException("DriversController: Failed to prepare drivers deletion query: " + query.lastError().text());
-    }
-    query.bindValue(":id", id);
-
-    if (!query.exec()) {
-        throw DatabaseException("DriversController: Failed to execute drivers deletion query: " + query.lastError().text());
-    }
-
+    query =  prepareAndExecQuery("DELETE FROM drivers WHERE id = :id", { {":id", id} });
     if (query.numRowsAffected() == 0) {
         throw ValidationException("DriversController: No driver found with ID " + QString::number(id));
     }
-
+    UpdateManager::instance()->driversInfoUpdated();
     qDebug() << "Driver with ID" << id << "and associated participation records successfully deleted.";
 }
 
 
+QSqlQuery DriverController::prepareAndExecQuery(const QString& queryStr, const QVariantMap& bindValues = {}) {
+    QSqlDatabase db = getDatabase();
+    QSqlQuery query(db);
+
+    if (!query.prepare(queryStr)) {
+        throw DatabaseException("Error preparing query: " + query.lastError().text());
+    }
+
+    for (auto it = bindValues.constBegin(); it != bindValues.constEnd(); ++it) {
+        query.bindValue(it.key(), it.value());
+    }
+
+    if (!query.exec()) {
+        throw DatabaseException("Error executing query: " + query.lastError().text());
+    }
+
+    return query;
+}
+QSqlDatabase DriverController::getDatabase() {
+    QSqlDatabase db = QSqlDatabase::database(qgetenv("MAIN_CONNECTION"));
+    if (!db.isOpen()) {
+        throw DatabaseException("Error opening database: " + db.lastError().text());
+    }
+    return db;
+}

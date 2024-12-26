@@ -3,7 +3,7 @@
 namespace InitConstants {
     const QString bgImagePath = ":/resources/images/mainWindowBg.jpg";
     const QSize contentWidgetSize = QSize(800, 600);
-    const QStringList sidebarItems = {"Item 1", "Item 2", "Item 3"};
+    const QStringList sidebarItems = {"Drivers", "Teams", "Races"};
 }
 
 
@@ -31,6 +31,10 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
     centralLayout->addStretch();
 
     updateBackgroundImage(InitConstants::bgImagePath);
+    connect(sidebar, &QListWidget::currentRowChanged, this, [&](int currRow) {
+        qDebug() << "Row changed:" << currRow;
+        driversWidget->setCurrentIndex(currRow);
+    });
 }
 
 void MainWindow::setupMainWindow() {

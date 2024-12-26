@@ -6,6 +6,7 @@ find_package(Qt5 COMPONENTS
         Core
         Widgets
         Sql
+        Test
         REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -17,6 +18,8 @@ set(CMAKE_AUTOUIC ON)
 set(ENTITIES
         Entities/Driver.h
         Entities/Team.h
+        Entities/Team.cpp
+        Entities/Driver.cpp
 )
 
 set(EXCEPTIONS
@@ -35,11 +38,15 @@ set(VIEW
         View/DriversView/DriversCard.h
         View/DriversView/DriversView.cpp
         View/DriversView/AddDriversDialog.h
+        View/TeamView/TeamsView.cpp
+#        View/TeamView/TeamsCard.h
+        View/TeamView/AddTeamsDialog.h
 )
 
 set(MODELS
         Models/DriversModel.h
-        Models/DriversModel.cpp
+        Models/BaseListModel.h
+        Models/TeamsModel.h
 )
 
 set(CONTROLLERS
@@ -47,7 +54,7 @@ set(CONTROLLERS
         Controllers/DriverController.h
         Controllers/TeamController.cpp
         Controllers/TeamController.h
-
+        View/TeamView/TeamsView.h
 )
 
 set(DB
@@ -62,6 +69,8 @@ add_executable(leti_kursovaya
         ${MODELS}
         ${EXCEPTIONS}
         ${ENTITIES}
+        UpdateManager.cpp
+        UpdateManager.h
 )
 
 target_link_libraries(leti_kursovaya PRIVATE
@@ -69,3 +78,16 @@ target_link_libraries(leti_kursovaya PRIVATE
         Qt5::Core
         Qt5::Sql
 )
+
+# Тесты
+set(TEST_SOURCES
+        Tests/test_models.cpp
+)
+add_executable(tests ${TEST_SOURCES}
+        ${MODELS}
+        ${CONTROLLERS}
+        ${MODELS}
+        ${EXCEPTIONS}
+        ${ENTITIES})
+target_link_libraries(tests Qt5::Core Qt5::Test Qt5::Sql)
+#add_custom_target(run_tests COMMAND DriversAppTests)

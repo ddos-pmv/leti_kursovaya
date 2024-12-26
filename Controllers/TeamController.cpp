@@ -1,9 +1,4 @@
 #include "TeamController.h"
-#include <QVariant>
-#include <QSqlError>
-#include <QSqlQuery>
-#include <QDebug>
-#include <stdexcept>
 
 void TeamController::validateTeamName(const QString &teamName) {
     if (teamName.isEmpty()) {
@@ -19,48 +14,68 @@ QSqlDatabase TeamController::getDatabase() {
     return db;
 }
 
-void TeamController::add(const QString &teamName) {
-    validateTeamName(teamName);
-    QSqlDatabase db = getDatabase();
-
-    QSqlQuery query(db);
-    if (!query.prepare("INSERT INTO teams (name) VALUES (:name)")) {
-        throw DatabaseException("Error preparing query: " + query.lastError().text());
+void TeamController::validate(const Team& team) {
+    if (team.name().isEmpty()) {
+        throw ValidationException("Team name cannot be empty.");
     }
-    query.bindValue(":name", teamName);
-
-    if (!query.exec()) {
-        throw DatabaseException("Error executing query: " + query.lastError().text());
+    if (team.driversCol() < 0) {
+        throw ValidationException("Number of drivers cannot be less than 0.");
     }
 }
 
-QVector<Team> TeamController::all() {
-    QSqlDatabase db = getDatabase();
+int TeamController::add(const QString &teamName) {
+    validateTeamName(teamName);
+    QSqlQuery query = prepareAndExecQuery("INSERT INTO teams (name) VALUES (:name)", {{":name", teamName}});
 
-    QSqlQuery query(db);
-    if (!query.prepare("SELECT id, name FROM teams")) {
-        throw DatabaseException("Error preparing query: " + query.lastError().text());
+    bool ok;
+    int teamId = query.lastInsertId().toInt(&ok);
+
+    if (!ok) {
+        throw DatabaseException("Unable to retrieve the ID of the added team.");
     }
+    UpdateManager::instance()->teamsInfoUpdated();
+    return teamId;
+}
 
-    if (!query.exec()) {
-        throw DatabaseException("Error executing query: " + query.lastError().text());
-    }
+QVector<QSharedPointer<Team>> TeamController::all() {
+    QSqlQuery query;
+    query = prepareAndExecQuery("SELECT t.id, t.name, "
+            "(SELECT COUNT(*) FROM drivers d WHERE d.team_id = t.id) AS drivers_count, "
+            "(SELECT COALESCE(SUM(rp.points), 0) "
+            " FROM drivers d "
+            " LEFT JOIN race_participation rp ON d.id = rp.driver_id "
+            " WHERE d.team_id = t.id) AS total_points "
+            "FROM teams t", {});
 
-    QVector<Team> teams;
+    QVector<QSharedPointer<Team>> teams;
     while (query.next()) {
-        teams.append(Team(query.value("id").toInt(), query.value("name").toString()));
+        int teamId = query.value("id").toInt();
+        QString teamName = query.value("name").toString();
+        int driversCount = query.value("drivers_count").toInt();
+        int totalPoints = query.value("total_points").toInt();
+
+        teams.append(QSharedPointer<Team>::create(teamId, teamName, driversCount, totalPoints));
     }
 
     return teams;
 }
 
-QString TeamController::get(const int id) {
+QSharedPointer<Team> TeamController::get(const int id) {
     QSqlDatabase db = getDatabase();
 
     QSqlQuery query(db);
-    if (!query.prepare("SELECT name FROM teams WHERE id = :id")) {
-        throw DatabaseException("Error preparing query: " + query.lastError().text());
+    if (!query.prepare(
+            "SELECT t.id, t.name, "
+            "(SELECT COUNT(*) FROM drivers d WHERE d.team_id = t.id) AS drivers_count, "
+            "(SELECT COALESCE(SUM(rp.points), 0) "
+            " FROM drivers d "
+            " LEFT JOIN race_participation rp ON d.id = rp.driver_id "
+            " WHERE d.team_id = t.id) AS total_points "
+            "FROM teams t"
+            " WHERE id = :id")) {
+        throw DatabaseException("Error getting team" + query.lastError().text());
     }
+
     query.bindValue(":id", id);
 
     if (!query.exec()) {
@@ -70,7 +85,11 @@ QString TeamController::get(const int id) {
         throw ValidationException("Team not found with id: " + QString::number(id));
     }
 
-    return query.value(0).toString();
+    return QSharedPointer<Team>::create(
+        query.value("id").toInt(),
+    query.value("name").toString(),
+    query.value("drivers_count").toInt(),
+    query.value("total_points").toInt());
 }
 
 int TeamController::get(const QString &teamName) {
@@ -94,33 +113,35 @@ int TeamController::get(const QString &teamName) {
 
 void TeamController::update(int id, const QString &newName) {
     validateTeamName(newName);
+    QSqlQuery query;
 
-    QSqlDatabase db = getDatabase();
-    QSqlQuery query(db);
+    query = prepareAndExecQuery(QString("SELECT id FROM teams WHERE id = :id"), {{":id", id}});
 
-    // Check if the team exists
-    if (!query.prepare("SELECT id FROM teams WHERE id = :id")) {
-        throw DatabaseException("Error preparing query: " + query.lastError().text());
-    }
-    query.bindValue(":id", id);
-
-    if (!query.exec()) {
-        throw DatabaseException("Error executing query: " + query.lastError().text());
-    }
     if (!query.next()) {
         throw ValidationException("No such team with id: " + QString::number(id));
     }
 
     // Update the team name
-    if (!query.prepare("UPDATE teams SET name = :name WHERE id = :id")) {
+    prepareAndExecQuery("UPDATE teams SET name = :name WHERE id = :id", {{":name", newName}, {":id", id}});
+    UpdateManager::instance()->teamsInfoUpdated();
+}
+
+
+QSqlQuery TeamController::prepareAndExecQuery(const QString& queryStr, const QVariantMap& bindValues = {}) {
+    QSqlDatabase db = getDatabase();
+    QSqlQuery query(db);
+
+    if (!query.prepare(queryStr)) {
         throw DatabaseException("Error preparing query: " + query.lastError().text());
     }
-    query.bindValue(":name", newName);
-    query.bindValue(":id", id);
+
+    for (auto it = bindValues.constBegin(); it != bindValues.constEnd(); ++it) {
+        query.bindValue(it.key(), it.value());
+    }
 
     if (!query.exec()) {
         throw DatabaseException("Error executing query: " + query.lastError().text());
     }
 
-    qDebug() << "Team updated successfully.";
+    return query;
 }
