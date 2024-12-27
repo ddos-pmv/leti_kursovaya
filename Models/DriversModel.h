@@ -29,6 +29,7 @@ public:
 
         loadItemsFromDatabase();
         connect(UpdateManager::instance(), &UpdateManager::teamsUpdated, this, &DriversModel::loadItemsFromDatabase);
+        connect(UpdateManager::instance(), &UpdateManager::driversUpdated, this, &DriversModel::loadItemsFromDatabase);
     }
 
     QVariant dataForRole(const QSharedPointer<Driver>& item, int role) const override {

@@ -1,7 +1,5 @@
 #include "TeamsView.h"
 
-#include "AddTeamsDialog.h"
-
 TeamsView::TeamsView(QWidget* parent) : QStackedWidget(parent) {
     listViewWrapper = new QWidget(this);
     listViewWrapper->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -68,11 +66,22 @@ TeamsView::TeamsView(QWidget* parent) : QStackedWidget(parent) {
         teamsModel->addItem(item);
     }
 
+    teamsCard = new TeamsCard(this);
+
     addWidget(listViewWrapper);
-    // addWidget(driversCard);
+    addWidget(teamsCard);
     setCurrentIndex(0);
     connectTitleButtons();
-    connect(addBtn, &QPushButton::clicked, this, &TeamsView::showDialog);
+
+    connect(teamsCard,&TeamsCard::closeCard, this, [&]() {
+        setCurrentIndex(0);
+    });
+    connect(teamsListView, &QListView::clicked, this, [&](const QModelIndex& index) {
+        QModelIndex sourceIndex = sortProxyModel->mapToSource(index);
+        int selectedId = teamsModel->data(sourceIndex, TeamsModel::IdRole).toInt();
+        teamsCard->setTeam(selectedId);
+        setCurrentIndex(1);
+    });
 }
 
 
@@ -166,11 +175,61 @@ QWidget* TeamsView::createControlHeader(QWidget *parent) {
                        "color: black;"
                        "}");
 
-    addBtn = new QPushButton("+", parent);
+    addBtn = new QPushButton("+", row);
+    removeBtn = new QPushButton("-", row);
+    editBtn = new QPushButton("Edit", row);
     // sortByName = new QPushButton("By name", parent);
 
     layout->addWidget(addBtn);
+    layout->addWidget(removeBtn);
+    layout->addWidget(editBtn);
     row->setLayout(layout);
+
+    connect(addBtn, &QPushButton::clicked, this, &TeamsView::showDialog);
+    connect(removeBtn, &QPushButton::clicked, this, [&]() {
+        auto rowIndex = listView()->currentIndex();
+        if(rowIndex.row() == -1) {
+            QMessageBox::critical(this, "Error", "Please select a team to delete.");
+            return;
+        }
+        int teamId = teamsModel->data(rowIndex,TeamsModel::IdRole).toInt();
+        auto reply = QMessageBox::question(this, "Confirm Delete",
+                                          "Are you sure you want to delete this driver?");
+       if (reply == QMessageBox::Yes) {
+           try {
+               TeamController::remove(teamId);
+                teamsModel->removeItem(rowIndex.row());
+               QMessageBox::information(this, "Success", "Driver updated successfully.");
+           }
+           catch (const std::exception& e) {
+               QMessageBox::critical(this, "Error", e.what());
+           }
+       }
+    });
+
+    connect(editBtn, &QPushButton::clicked, this, [&]() {
+        auto rowIndex = listView()->currentIndex();
+        if(rowIndex.row() == -1) {
+            QMessageBox::critical(this, "Error", "Please select a team to edit.");
+            return;
+        }
+        int teamId = teamsModel->data(rowIndex,TeamsModel::IdRole).toInt();
+        auto team = TeamController::get(teamId);
+        AddTeamsDialog dialog(this);
+
+        if (dialog.exec() == QDialog::Accepted) {
+            QString teamName = dialog.getTeamName();
+
+            try {
+                TeamController::validateTeamName(teamName);
+                TeamController::update(teamId, teamName);
+                team->setName(teamName);
+                teamsModel->updateItem(rowIndex.row(), team);
+            } catch (const std::exception& e) {
+                QMessageBox::critical(this, "Error", e.what());
+            }
+        }
+    });
 
     return row;
 }

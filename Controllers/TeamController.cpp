@@ -95,15 +95,7 @@ QSharedPointer<Team> TeamController::get(const int id) {
 int TeamController::get(const QString &teamName) {
     QSqlDatabase db = getDatabase();
 
-    QSqlQuery query(db);
-    if (!query.prepare("SELECT id FROM teams WHERE name = :name")) {
-        throw DatabaseException("Error preparing query: " + query.lastError().text());
-    }
-    query.bindValue(":name", teamName);
-
-    if (!query.exec()) {
-        throw DatabaseException("Error executing query: " + query.lastError().text());
-    }
+    QSqlQuery query = prepareAndExecQuery("SELECT id FROM teams WHERE name = :name", {{":name", teamName}});
     if (!query.next()) {
         throw ValidationException("Team not found with name: " + teamName);
     }
@@ -124,6 +116,26 @@ void TeamController::update(int id, const QString &newName) {
     // Update the team name
     prepareAndExecQuery("UPDATE teams SET name = :name WHERE id = :id", {{":name", newName}, {":id", id}});
     UpdateManager::instance()->teamsInfoUpdated();
+}
+
+void TeamController::remove(int teamId) {
+    if (countDrivers(teamId) == 0) {
+        QString queryStr = "DELETE FROM teams WHERE id = :teamId";
+        prepareAndExecQuery(queryStr, { {":teamId", teamId} });
+    }
+    else {
+        throw ValidationException("Cannot delete team with drivers assigned to it.");
+    }
+
+}
+
+int TeamController::countDrivers(int teamId) {
+    QSqlQuery query =  prepareAndExecQuery("SELECT COUNT(*) FROM drivers WHERE team_id = :teamId",
+        {{":teamId", teamId}});
+    if (!query.next()) {
+        throw ValidationException("Team was not found with id: " + QString::number(teamId));
+    }
+    return query.value(0).toInt();
 }
 
 

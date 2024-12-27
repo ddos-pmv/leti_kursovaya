@@ -2,8 +2,11 @@
 
 Driver::Driver(int id, const QString &name, uint age, const QString &team, int points, QObject* parent)
 : m_id(id), m_name(name), m_age(age), m_team(team), m_points(points), QObject(parent) {};
-Driver::Driver(const QString &name, uint age, const QString &team, int points, QObject* parent) noexcept
-    : m_id(-1), m_name(name), m_age(age), m_team(team), m_points(points), QObject(parent){};
+
+Driver::Driver(const QString &name, uint age,const QString &team, int points, QObject* parent) noexcept
+    : m_id(-1), m_name(name), m_age(age),m_team(team),
+    m_points(points), QObject(parent){};
+
 int Driver::id() const {return m_id;}
 int Driver::age() const {return m_age;}
 QString Driver::name() const {return m_name;}
@@ -16,6 +19,7 @@ void Driver::setId(int id) {
         emit idChanged(m_id);
     }
 }
+
 void Driver::setName(const QString& name) {
     if(m_name != name) {
         m_name = name;
@@ -29,7 +33,6 @@ void Driver::setAge(int age) {
         emit ageChanged(m_age);
     }
 }
-
 
 void Driver::setTeam(const QString& team) {
     if(m_team != team) {

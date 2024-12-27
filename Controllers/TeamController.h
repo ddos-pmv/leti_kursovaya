@@ -31,6 +31,11 @@ public:
     static QSharedPointer<Team> get(int id);
     static int get(const QString& teamName);
     static void update(int id, const QString& newName);
+    static void remove(int teamId);
+    static int countDrivers(int teamId);
+
+    static void getDrivers(uint teamId);
+
 private:
     static QSqlQuery prepareAndExecQuery(const QString &queryStr, const QVariantMap &bindValues);
 };

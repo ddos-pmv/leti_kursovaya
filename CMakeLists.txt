@@ -7,6 +7,7 @@ find_package(Qt5 COMPONENTS
         Widgets
         Sql
         Test
+        Pdf
         REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -20,6 +21,8 @@ set(ENTITIES
         Entities/Team.h
         Entities/Team.cpp
         Entities/Driver.cpp
+        Entities/Race.cpp
+        Entities/Race.h
 )
 
 set(EXCEPTIONS
@@ -39,8 +42,15 @@ set(VIEW
         View/DriversView/DriversView.cpp
         View/DriversView/AddDriversDialog.h
         View/TeamView/TeamsView.cpp
-#        View/TeamView/TeamsCard.h
+        View/TeamView/TeamsCard.h
         View/TeamView/AddTeamsDialog.h
+        View/TeamView/TeamsView.cpp
+        View/RacesView/RaceView.cpp
+        View/RacesView/RaceView.h
+        Models/RacesModel.h
+        View/RacesView/RacesDelegate.h
+        View/RacesView/AddRaceDialog.h
+        View/RacesView/RacesCard.h
 )
 
 set(MODELS
@@ -55,6 +65,8 @@ set(CONTROLLERS
         Controllers/TeamController.cpp
         Controllers/TeamController.h
         View/TeamView/TeamsView.h
+        Controllers/RaceController.cpp
+        Controllers/RaceController.h
 )
 
 set(DB
@@ -77,6 +89,7 @@ target_link_libraries(leti_kursovaya PRIVATE
         Qt5::Widgets
         Qt5::Core
         Qt5::Sql
+        Qt5::Pdf
 )
 
 # Тесты

@@ -17,14 +17,17 @@
 #include "../Entities/Driver.h"
 #include "DriversView/DriversView.h"
 #include "Teamview/TeamsView.h"
+#include "RacesView/RaceView.h"
 class StackedWidget : public QStackedWidget {
 public:
     explicit StackedWidget(QWidget* parent = nullptr) : QStackedWidget(parent) {
         driverView = new DriversView(this);
         teamsView = new TeamsView(this);
+        raceView = new RaceView(this);
 
         addWidget(driverView);
         addWidget(teamsView);
+        addWidget(raceView);
         setCurrentIndex(0);
         connect(driverView->listView(), &QListView::clicked, this, [this](const QModelIndex& index) {
            qDebug() << "Selected:" << driverView->model()->data(index, DriversModel::NameRole).toString();
@@ -33,6 +36,7 @@ public:
 private:
     DriversView* driverView;
     TeamsView* teamsView;
+    RaceView* raceView;
 
 
     void setupDriversContent();

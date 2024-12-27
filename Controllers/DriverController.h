@@ -24,7 +24,20 @@ public:
     static int add(const QString& name, int  age, int team_id);
     static void update(int id, const QString& name, int age, int team_id);
     static QSharedPointer<Driver> getById(int id);
+
+    static void removeDriverFromRace(int driverId, int raceId);
+
     static void remove(int id);
+
+    static QVector<QSharedPointer<Driver>> getDriversByTeamId(uint id);
+
+    static QVector<QSharedPointer<Driver>> getDriversByRaceId(uint raceId);
+
+    static int getDriverPointsInRace(int driverId, int raceId);
+
+    static QSharedPointer<Driver> getDriverByNameAndTeam(const QString &name, const QString &teamName);
+
+    static void addDriverToRace(int driverId, int raceId, int points);
 
 private:
     static QSqlQuery prepareAndExecQuery(const QString &queryStr, const QVariantMap &bindValues);

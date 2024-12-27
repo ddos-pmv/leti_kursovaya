@@ -136,6 +136,19 @@ QSharedPointer<Driver> DriverController::getById(int id) {
 
     return QSharedPointer<Driver>(new Driver(driverId, name, age, teamName, totalPoints));
 }
+void DriverController::removeDriverFromRace(int driverId, int raceId) {
+    QSqlQuery query = prepareAndExecQuery(
+        "DELETE FROM race_participation WHERE driver_id = :driver_id AND race_id = :race_id",
+        { {":driver_id", driverId}, {":race_id", raceId} }
+    );
+
+    if (query.numRowsAffected() == 0) {
+        throw ValidationException("No participation record found for driver ID " + QString::number(driverId) + " in race ID " + QString::number(raceId));
+    }
+
+    UpdateManager::instance()->driversInfoUpdated();
+    qDebug() << "Driver with ID" << driverId << "successfully removed from race with ID" << raceId;
+}
 
 void DriverController::remove(int id) {
     QSqlQuery query = prepareAndExecQuery("DELETE FROM race_participation WHERE driver_id = :id", { {":id", id} });
@@ -148,6 +161,111 @@ void DriverController::remove(int id) {
     qDebug() << "Driver with ID" << id << "and associated participation records successfully deleted.";
 }
 
+
+QVector<QSharedPointer<Driver>> DriverController::getDriversByTeamId(uint id) {
+    QSqlQuery query = prepareAndExecQuery(
+        "SELECT d.id, d.name, d.age, t.name AS team_name, "
+        "COALESCE(SUM(rp.points), 0) AS total_points "
+        "FROM drivers d "
+        "LEFT JOIN teams t ON d.team_id = t.id "
+        "LEFT JOIN race_participation rp ON d.id = rp.driver_id "
+        "WHERE d.team_id = :team_id "
+        "GROUP BY d.id, d.name, d.age, t.name",
+        { {":team_id", id} }
+    );
+
+    QVector<QSharedPointer<Driver>> drivers;
+
+    while (query.next()) {
+        drivers.append(QSharedPointer<Driver>(new Driver(
+            query.value("id").toInt(),
+            query.value("name").toString(),
+            query.value("age").toInt(),
+            query.value("team_name").toString(),
+            query.value("total_points").toInt()
+        )));
+    }
+
+    return drivers;
+}
+QVector<QSharedPointer<Driver>> DriverController::getDriversByRaceId(uint raceId) {
+    QSqlQuery query = prepareAndExecQuery(
+        "SELECT d.id, d.name, d.age, t.name AS team_name, "
+        "COALESCE(SUM(rp.points), 0) AS total_points "
+        "FROM drivers d "
+        "LEFT JOIN teams t ON d.team_id = t.id "
+        "LEFT JOIN race_participation rp ON d.id = rp.driver_id "
+        "WHERE rp.race_id = :race_id "
+        "GROUP BY d.id, d.name, d.age, t.name",
+        { {":race_id", raceId} }
+    );
+
+    QVector<QSharedPointer<Driver>> drivers;
+
+    while (query.next()) {
+        drivers.append(QSharedPointer<Driver>(new Driver(
+            query.value("id").toInt(),
+            query.value("name").toString(),
+            query.value("age").toInt(),
+            query.value("team_name").toString(),
+            query.value("total_points").toInt()
+        )));
+    }
+
+    return drivers;
+}
+
+int DriverController::getDriverPointsInRace(int driverId, int raceId) {
+    QSqlQuery query = prepareAndExecQuery(
+        "SELECT points FROM race_participation "
+        "WHERE driver_id = :driver_id AND race_id = :race_id",
+        { {":driver_id", driverId}, {":race_id", raceId} }
+    );
+
+    if (!query.next()) {
+        throw ValidationException("No participation record found for driver ID " + QString::number(driverId) + " in race ID " + QString::number(raceId));
+    }
+
+    return query.value("points").toInt();
+}
+
+QSharedPointer<Driver> DriverController::getDriverByNameAndTeam(const QString& name, const QString& teamName) {
+    QSqlQuery query = prepareAndExecQuery(
+        "SELECT d.id, d.name, d.age, t.name AS team_name, "
+        "COALESCE(SUM(rp.points), 0) AS total_points "
+        "FROM drivers d "
+        "LEFT JOIN teams t ON d.team_id = t.id "
+        "LEFT JOIN race_participation rp ON d.id = rp.driver_id "
+        "WHERE d.name = :name AND t.name = :team_name "
+        "GROUP BY d.id, d.name, d.age, t.name",
+        { {":name", name}, {":team_name", teamName} }
+    );
+
+    if (!query.next()) {
+        throw ValidationException("No driver found with name " + name + " in team " + teamName);
+    }
+
+    int driverId = query.value("id").toInt();
+    QString driverName = query.value("name").toString();
+    int age = query.value("age").toInt();
+    QString driverTeamName = query.value("team_name").toString();
+    int totalPoints = query.value("total_points").toInt();
+
+    return QSharedPointer<Driver>(new Driver(driverId, driverName, age, driverTeamName, totalPoints));
+}
+void DriverController::addDriverToRace(int driverId, int raceId, int points) {
+    QSqlQuery query = prepareAndExecQuery(
+        "INSERT INTO race_participation (race_id, driver_id, points) "
+        "VALUES (:race_id, :driver_id, :points)",
+        { {":driver_id", driverId}, {":race_id", raceId}, {":points", points} }
+    );
+
+    if (query.numRowsAffected() == 0) {
+        throw DatabaseException("Failed to add driver to race.");
+    }
+
+    UpdateManager::instance()->driversInfoUpdated();
+}
 
 QSqlQuery DriverController::prepareAndExecQuery(const QString& queryStr, const QVariantMap& bindValues = {}) {
     QSqlDatabase db = getDatabase();

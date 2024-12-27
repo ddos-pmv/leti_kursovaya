@@ -14,13 +14,14 @@ public:
     static UpdateManager* instance();
 
     void teamsInfoUpdated();
-
     void driversInfoUpdated();
+    void tracksInfoUpdated();
 
 
 signals:
     void teamsUpdated();
     void driversUpdated();
+    void tracksUpdated();
 
 
 private:

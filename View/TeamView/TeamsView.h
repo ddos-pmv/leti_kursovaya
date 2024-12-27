@@ -13,7 +13,8 @@
 #include "../../Models/TeamsModel.h"
 #include "TeamsDelegate.h"
 #include "../MainThemeVars.h"
-// #include "TeamsCard.h"
+#include "AddTeamsDialog.h"
+#include "TeamsCard.h"
 
 class TeamsView : public QStackedWidget {
     public:
@@ -27,6 +28,7 @@ private:
     QWidget* controlHeader;
     QPushButton* addBtn;
     QPushButton* removeBtn;
+    QPushButton* editBtn;
 
     QWidget* titleHeader;
     QHBoxLayout* titleHeaderLayout;
@@ -41,7 +43,7 @@ private:
 
     QListView* teamsListView;
     TeamsModel* teamsModel;
-    // TeamsCard* teamsCard;
+    TeamsCard* teamsCard;
     QSortFilterProxyModel* sortProxyModel;
 
     void setStyleSheetForListView(QListView* listView);

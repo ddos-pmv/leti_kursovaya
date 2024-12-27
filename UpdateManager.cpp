@@ -18,5 +18,9 @@ void UpdateManager::driversInfoUpdated() {
     emit driversUpdated();
 }
 
+void UpdateManager::tracksInfoUpdated() {
+    emit tracksUpdated();
+}
+
 UpdateManager::UpdateManager(QObject *parent) : QObject(parent) {
 }

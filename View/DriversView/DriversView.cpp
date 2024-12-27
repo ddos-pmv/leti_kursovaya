@@ -75,14 +75,10 @@ DriversView::DriversView(QWidget* parent) : QStackedWidget(parent) {
 
     connect(addDriverButton, &QPushButton::clicked, this, &DriversView::showAddDriverDialog);
     connect(driversListView, &QListView::clicked, this, [&](const QModelIndex& index) {
-        int selectedDriverId =  driversModel->data(index, DriversModel::IdRole).toInt();
-        driversCard->setDriver(
-            QSharedPointer<Driver>(
-                DriverController::getById(selectedDriverId)
-                ));
-
+        QModelIndex sourceIndex = sortProxyModel->mapToSource(index);
+        int selectedDriverId = driversModel->data(sourceIndex, DriversModel::IdRole).toInt();
+        driversCard->setDriver(QSharedPointer<Driver>(DriverController::getById(selectedDriverId)));
         setCurrentIndex(1);
-
     });
 
     connect(driversCard, &DriversCard::closeCart, this, [this]() {
